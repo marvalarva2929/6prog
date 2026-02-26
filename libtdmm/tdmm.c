@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define HEAP_SIZE 65536 + sizeof(memList)
+const size_t HEAP_SIZE = 18446744073709551615;
 
 alloc_strat_e strategy;
 memList *list;
@@ -69,7 +69,6 @@ void t_init(alloc_strat_e strat) {
 	                 MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 	if (mem == MAP_FAILED) {
 		fprintf(stderr, "mmap failed\n");
-		exit(1);
 	}
 
 	list = (memList *)mem;
@@ -158,7 +157,6 @@ void t_free(void *ptr) {
 	}
 
 	fprintf(stderr, "t_free: pointer not found or already freed\n");
-	exit(1);
 }
 
 
