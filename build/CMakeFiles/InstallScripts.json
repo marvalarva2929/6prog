@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/joshv/CS429/6prog/build/cmake_install.cmake",
+		"/Users/joshv/CS429/6prog/build/libtdmm/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
