@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-const size_t HEAP_SIZE = 50 + sizeof(memList);
+const size_t HEAP_SIZE = 65536 + sizeof(memList);
 
 alloc_strat_e strategy;
 memList *list;
