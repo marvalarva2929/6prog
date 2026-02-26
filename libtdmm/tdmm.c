@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-const size_t HEAP_SIZE = 65536 + sizeof(memList);
+const size_t HEAP_SIZE = 50 + sizeof(memList);
 
 alloc_strat_e strategy;
 memList *list;
@@ -149,7 +149,8 @@ void *t_malloc(size_t requestedSize) {
 	if (!candidate) {
 		memList * getBlock = getMem(sizeof(memList) + requestedSize);
 		addList(getBlock);
-		return t_malloc(requestedSize);
+		allocateMem(getBlock, requestedSize);
+		return (void *)(getBlock + 1);
 	}
 	
 	allocateMem(candidate, requestedSize);
