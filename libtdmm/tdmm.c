@@ -9,6 +9,7 @@ alloc_strat_e strategy;
 memList *list;
 
 void tprint() {
+	return;
 	memList *tlist = list;
 	while (tlist) {
 		if (tlist->header.isFree) printf("Free: %lu\n", tlist->header.size);
@@ -47,7 +48,6 @@ void collapseFree() {
 void allocateMem(memList *mem, size_t requestedSize) {
 	if (!mem->header.isFree) return;
 	
-	requestedSize += (4 - (requestedSize % 4)) % 4;
 	size_t totalNeeded = requestedSize + sizeof(memList);
 	size_t remaining   = mem->header.size - requestedSize;
 
@@ -98,6 +98,8 @@ void t_init(alloc_strat_e strat) {
 
 void *t_malloc(size_t requestedSize) {
 	if (requestedSize == 0) return NULL;
+
+	requestedSize += (4 - (requestedSize % 4)) % 4;
 
 	memList *candidate = NULL;
 	memList *tlist     = list;
