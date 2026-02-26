@@ -10,7 +10,7 @@ memList *list;
 int regions = 0;
 
 void tprint() {
-	//return;
+	return;
 	memList *tlist = list;
 	while (tlist) {
 		if (tlist->header.isFree) printf("Free: %lu\n", tlist->header.size);
