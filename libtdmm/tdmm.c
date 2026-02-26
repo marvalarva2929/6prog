@@ -3,14 +3,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-const size_t HEAP_SIZE = 50 + sizeof(memList);
+const size_t HEAP_SIZE = 65536 + sizeof(memList);
 
 alloc_strat_e strategy;
 memList *list;
 int regions = 0;
 
 void tprint() {
-	return;
+	//return;
 	memList *tlist = list;
 	while (tlist) {
 		if (tlist->header.isFree) printf("Free: %lu\n", tlist->header.size);
@@ -166,16 +166,12 @@ void *t_malloc(size_t requestedSize) {
 void t_free(void *ptr) {
 	if (!ptr) return;
 
-	memList *tlist = list;
-	while (tlist) {
-		/* The user pointer sits one memList-header past the node address */
-		if (ptr == (void *)(tlist + 1) && !tlist->header.isFree) {
-			tlist->header.isFree = 1;
-			collapseFree();
-			tprint();
-			return;
-		}
-		tlist = tlist->next;
+	memList *tlist = (memList*)ptr - 1;
+	if (!tlist->header.isFree) {
+		tlist->header.isFree = 1;
+		collapseFree();
+		tprint();
+		return;
 	}
 
 	fprintf(stderr, "t_free: pointer not found or already freed\n");
