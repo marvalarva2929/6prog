@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-const size_t HEAP_SIZE = 1048576 + sizeof(memList);
+const size_t HEAP_SIZE = 65536 + sizeof(memList);
 
 alloc_strat_e strategy;
 memList *list;
@@ -15,6 +15,7 @@ void tprint() {
 		else printf("Mallocd: %lu\n", tlist->header.size);
 		tlist = tlist->next;
 	}
+	printf("\n");
 }
 
 /* Merge consecutive free blocks to prevent fragmentation. */
@@ -24,7 +25,10 @@ void collapseFree() {
 		/* Only try to merge if this block is free AND has a next block */
 		if (tlist->header.isFree && tlist->next != NULL) {
 			/* Keep merging as long as the next block is also free */
-			while (tlist->next != NULL && tlist->next->header.isFree) {
+			while (tlist->next != NULL 
+					&& tlist->next->header.isFree
+					&& ((void*)(((char*)(tlist+1)) + tlist->header.size) 
+						== (void*)(char*)tlist->next)) {
 				memList *n = tlist->next;
 				/* Absorb n's size (including its header) into tlist */
 				tlist->header.size +=  n->header.size + sizeof(memList);
@@ -63,21 +67,33 @@ void allocateMem(memList *mem, size_t requestedSize) {
 	mem->header.size   = requestedSize;
 }
 
-void t_init(alloc_strat_e strat) {
-	strategy = strat;
-	void *mem = mmap(NULL, HEAP_SIZE, PROT_READ | PROT_WRITE,
+memList *getMem(size_t size) {
+	memList * ret;
+	void *mem = mmap(NULL, size, PROT_READ | PROT_WRITE,
 	                 MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 	if (mem == MAP_FAILED) {
 		fprintf(stderr, "mmap failed\n");
 	}
 
-	list = (memList *)mem;
-	list->header.size   = HEAP_SIZE - sizeof(memList);
-	list->header.isFree = 1;
-	list->next          = NULL;
+	ret = (memList *)mem;
+	ret->header.size   = size - sizeof(memList);
+	ret->header.isFree = 1;
+	ret->next          = NULL;
+	return ret;
+}
 
+void addList(memList* toAdd) {
+	memList* tlist = list;
+	while (tlist->next) {
+		tlist = tlist->next;
+	}
+	tlist->next = toAdd;
+}
+
+void t_init(alloc_strat_e strat) {
+	strategy = strat;
+	list = getMem(HEAP_SIZE);
 	tprint();
-	printf("\n");
 }
 
 void *t_malloc(size_t requestedSize) {
@@ -131,8 +147,9 @@ void *t_malloc(size_t requestedSize) {
 	}
 
 	if (!candidate) {
-		fprintf(stderr, "t_malloc: out of memory\n");
-		return NULL;
+		memList * getBlock = getMem(sizeof(memList) + requestedSize);
+		addList(getBlock);
+		return t_malloc(requestedSize);
 	}
 	
 	allocateMem(candidate, requestedSize);
