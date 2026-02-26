@@ -2,6 +2,7 @@
 #define TDMM_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 typedef enum {
   FIRST_FIT,
@@ -12,6 +13,7 @@ typedef enum {
 typedef struct Header {
 	size_t size;
 	int isFree;
+	uint8_t region;
 } Header;
 
 typedef struct memList {
