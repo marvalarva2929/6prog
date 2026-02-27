@@ -3,10 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-const size_t HEAP_SIZE = 300 + sizeof(memList);
+const size_t HEAP_SIZE = 65563 + sizeof(memList);
 
 alloc_strat_e strategy;
 memList *list;
+memList *tail;
 int regions = 0;
 
 void tprint() {
@@ -24,21 +25,20 @@ void tprint() {
 /* Merge consecutive free blocks to prevent fragmentation. */
 void collapseFree(memList * ist) {
 	memList * tlist = ist;
-	for (int i = 0; i < 2; i++)
-		if (tlist->header.isFree && tlist->next != NULL) {
-			/* Keep merging as long as the next block is also free */
-			while (tlist->next != NULL 
-					&& tlist->next->header.isFree
-					&& tlist->header.region == tlist->next->header.region) {
-				memList *n = tlist->next;
-				/* Absorb n's size (including its header) into tlist */
-				tlist->header.size +=  n->header.size + sizeof(memList);
-				/* Unlink n — no free() since this memory is part of our mmap region */
-				tlist->next = n->next;
-				if (tlist->next)
-					tlist->next->prev = tlist;
-			}
+	if (tlist->header.isFree && tlist->next != NULL) {
+		/* Keep merging as long as the next block is also free */
+		while (tlist->next != NULL 
+				&& tlist->next->header.isFree
+				&& tlist->header.region == tlist->next->header.region) {
+			memList *n = tlist->next;
+			/* Absorb n's size (including its header) into tlist */
+			tlist->header.size +=  n->header.size + sizeof(memList);
+			/* Unlink n — no free() since this memory is part of our mmap region */
+			tlist->next = n->next;
+			if (tlist->next)
+				tlist->next->prev = tlist;
 		}
+	}
 }
 
 /*
@@ -65,6 +65,8 @@ void allocateMem(memList *mem, size_t requestedSize) {
 
 		mem->next = newnext;
 		mem->header.size = requestedSize;
+		if (tail == mem)
+			tail = mem->next;
 	}
 
 	mem->header.isFree = 0;
@@ -85,21 +87,21 @@ memList *getMem(size_t size) {
 	ret->header.isFree = 1;
 	ret->header.region = regions;
 	regions += 1;
-	ret->next          = NULL;
+	ret->next = NULL;
+	ret->prev = NULL;
 	return ret;
 }
 
 void addList(memList* toAdd) {
-	memList* tlist = list;
-	while (tlist->next) {
-		tlist = tlist->next;
-	}
-	tlist->next = toAdd;
+	tail->next = toAdd;
+	toAdd->prev = tail;
+	tail = tail->next;
 }
 
 void t_init(alloc_strat_e strat) {
 	strategy = strat;
 	list = getMem(HEAP_SIZE);
+	tail = list;
 	tprint();
 }
 
@@ -176,7 +178,7 @@ void t_free(void *ptr) {
 	if (!tlist->header.isFree) {
 		tlist->header.isFree = 1;
 		collapseFree(tlist);
-		if (tlist->prev)
+		if (tlist->prev && tlist->header.isFree)
 			collapseFree(tlist->prev);
 		tprint();
 		return;
