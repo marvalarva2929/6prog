@@ -1,16 +1,4 @@
 #!/usr/bin/env python3
-"""plot.py – generate charts from tdmm benchmark CSVs.
-
-Produces four PNG files:
-  1. utilization_over_time.png   – util% vs event number, one line per strategy
-  2. avg_utilization.png         – bar chart of average utilisation per strategy
-  3. speed_vs_size.png           – malloc & free ns vs request size (log x-axis)
-  4. overhead_over_time.png      – overhead bytes vs event number per strategy
-
-Usage:
-    python3 plot.py
-"""
-
 import sys
 import csv
 import math
@@ -83,7 +71,6 @@ def plot_utilization_over_time(csv_path="utilization_over_time.csv",
     plt.close(fig)
 
 
-# ── 2. Average utilization bar chart ─────────────────────────────────────────
 def plot_avg_utilization(csv_path="avg_utilization.csv",
                           out_path="avg_utilization.png"):
     if not Path(csv_path).exists():
@@ -115,7 +102,6 @@ def plot_avg_utilization(csv_path="avg_utilization.csv",
     plt.close(fig)
 
 
-# ── 3. Speed vs size ──────────────────────────────────────────────────────────
 def plot_speed_vs_size(csv_path="speed_vs_size.csv",
                         out_path="speed_vs_size.png"):
     if not Path(csv_path).exists():
@@ -160,7 +146,6 @@ def _human_bytes(n):
     return str(n)
 
 
-# ── 4. Overhead over time ─────────────────────────────────────────────────────
 def plot_overhead_over_time(csv_path="overhead_over_time.csv",
                              out_path="overhead_over_time.png"):
     if not Path(csv_path).exists():
@@ -203,7 +188,6 @@ def plot_overhead_over_time(csv_path="overhead_over_time.csv",
     plt.close(fig)
 
 
-# ── entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     print("Generating plots...")
     plot_utilization_over_time()
