@@ -1,0 +1,4 @@
+strategy,avg_utilization_pct,total_allocs,total_frees,final_system_bytes
+first_fit,73.1623,1062,1062,1377495
+best_fit,77.7761,1062,1062,1311900
+worst_fit,54.7021,1062,1062,1967850
