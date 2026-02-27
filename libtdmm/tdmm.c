@@ -2,6 +2,7 @@
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <stdio.h>
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 const size_t HEAP_SIZE = 65563 + sizeof(memList);
 
@@ -159,7 +160,7 @@ void *t_malloc(size_t requestedSize) {
 	}
 
 	if (!candidate) {
-		memList * getBlock = getMem(sizeof(memList) + requestedSize);
+		memList * getBlock = getMem(MAX(sizeof(memList) + requestedSize, HEAP_SIZE));
 		addList(getBlock);
 		allocateMem(getBlock, requestedSize);
 		tprint();
