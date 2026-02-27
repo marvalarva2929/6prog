@@ -37,6 +37,7 @@ void collapseFree(memList * ist) {
 			tlist->next = n->next;
 			if (tlist->next)
 				tlist->next->prev = tlist;
+			else tail = tlist;
 		}
 	}
 }
@@ -178,7 +179,7 @@ void t_free(void *ptr) {
 	if (!tlist->header.isFree) {
 		tlist->header.isFree = 1;
 		collapseFree(tlist);
-		if (tlist->prev && tlist->header.isFree)
+		if (tlist->prev && tlist->prev->header.isFree)
 			collapseFree(tlist->prev);
 		tprint();
 		return;
