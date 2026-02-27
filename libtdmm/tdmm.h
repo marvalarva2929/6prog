@@ -17,7 +17,7 @@ typedef struct Header {
 } Header;
 
 typedef struct memList {
-	struct memList *next;
+	struct memList *next, *prev;
 	Header header;
 } memList;
 

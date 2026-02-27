@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-const size_t HEAP_SIZE = 65536 + sizeof(memList);
+const size_t HEAP_SIZE = 100 + sizeof(memList);
 
 alloc_strat_e strategy;
 memList *list;
@@ -12,19 +12,19 @@ int regions = 0;
 void tprint() {
 	return;
 	memList *tlist = list;
+	int i = 0;
 	while (tlist) {
-		if (tlist->header.isFree) printf("Free: %lu\n", tlist->header.size);
-		else printf("Mallocd: %lu\n", tlist->header.size);
+		if (tlist->header.isFree) printf("%d: Free: %lu\n", list->header.region, tlist->header.size);
+		else printf("%d: Mallocd: %lu\n", list->header.region, tlist->header.size);
 		tlist = tlist->next;
 	}
 	printf("\n");
 }
 
 /* Merge consecutive free blocks to prevent fragmentation. */
-void collapseFree() {
-	memList *tlist = list;
+void collapseFree(memList * ist) {
+	memList * tlist = ist;
 	while (tlist) {
-		/* Only try to merge if this block is free AND has a next block */
 		if (tlist->header.isFree && tlist->next != NULL) {
 			/* Keep merging as long as the next block is also free */
 			while (tlist->next != NULL 
@@ -35,6 +35,8 @@ void collapseFree() {
 				tlist->header.size +=  n->header.size + sizeof(memList);
 				/* Unlink n — no free() since this memory is part of our mmap region */
 				tlist->next = n->next;
+				if (tlist->next)
+					tlist->next->prev = tlist;
 			}
 		}
 		tlist = tlist->next;
@@ -58,14 +60,18 @@ void allocateMem(memList *mem, size_t requestedSize) {
 		newnext->header.isFree = 1;
 		newnext->header.size   = remaining - sizeof(memList);
 		newnext->header.region = mem->header.region;
-		newnext->next          = mem->next;
+		newnext->prev = mem;
+		newnext->next = mem->next;
+		if (newnext->next) 
+			newnext->next->prev = newnext;
 
 		mem->next = newnext;
+		mem->header.size = requestedSize;
 	}
-	/* If there's no room for a split, just hand over the whole block as-is */
 
 	mem->header.isFree = 0;
-	mem->header.size   = requestedSize;
+	/* If there's no room for a split, just hand over the whole block as-is */
+
 }
 
 memList *getMem(size_t size) {
@@ -79,7 +85,8 @@ memList *getMem(size_t size) {
 	ret = (memList *)mem;
 	ret->header.size   = size - sizeof(memList);
 	ret->header.isFree = 1;
-	ret->header.region = regions++;
+	ret->header.region = regions;
+	regions += 1;
 	ret->next          = NULL;
 	return ret;
 }
@@ -154,6 +161,7 @@ void *t_malloc(size_t requestedSize) {
 		memList * getBlock = getMem(sizeof(memList) + requestedSize);
 		addList(getBlock);
 		allocateMem(getBlock, requestedSize);
+		tprint();
 		return (void *)(getBlock + 1);
 	}
 	
@@ -169,7 +177,7 @@ void t_free(void *ptr) {
 	memList *tlist = (memList*)ptr - 1;
 	if (!tlist->header.isFree) {
 		tlist->header.isFree = 1;
-		collapseFree();
+		collapseFree((tlist->prev) ? tlist->prev : tlist);
 		tprint();
 		return;
 	}
