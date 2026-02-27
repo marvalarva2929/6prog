@@ -10,6 +10,7 @@ int main(int argc, char *argv[]) {
 	intList[0] = 5;
 	intList[1] = 4;
 	t_free(pointer);
+	t_free(pointer3);
 	t_free(pointer2);
 	return 0;
 }

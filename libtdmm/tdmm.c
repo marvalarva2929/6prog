@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-const size_t HEAP_SIZE = 100 + sizeof(memList);
+const size_t HEAP_SIZE = 300 + sizeof(memList);
 
 alloc_strat_e strategy;
 memList *list;
@@ -24,7 +24,7 @@ void tprint() {
 /* Merge consecutive free blocks to prevent fragmentation. */
 void collapseFree(memList * ist) {
 	memList * tlist = ist;
-	while (tlist) {
+	for (int i = 0; i < 2; i++)
 		if (tlist->header.isFree && tlist->next != NULL) {
 			/* Keep merging as long as the next block is also free */
 			while (tlist->next != NULL 
@@ -39,8 +39,6 @@ void collapseFree(memList * ist) {
 					tlist->next->prev = tlist;
 			}
 		}
-		tlist = tlist->next;
-	}
 }
 
 /*
@@ -177,7 +175,9 @@ void t_free(void *ptr) {
 	memList *tlist = (memList*)ptr - 1;
 	if (!tlist->header.isFree) {
 		tlist->header.isFree = 1;
-		collapseFree((tlist->prev) ? tlist->prev : tlist);
+		collapseFree(tlist);
+		if (tlist->prev)
+			collapseFree(tlist->prev);
 		tprint();
 		return;
 	}
